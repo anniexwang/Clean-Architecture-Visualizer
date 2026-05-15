@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach} from '@jest/globals';
+import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
 import { GetFileContentInteractor } from "../../../src/use_case/getFileContent/getFileContentInteractor.js";
 import { FileAccess } from "../../../src/data_access/fileAccess.js";
 import { SessionDBAccess } from "../../../src/data_access/sessionDBAccess.js";
@@ -37,6 +37,11 @@ const mockFile: FileStorage[] = [{
     node: "controller",
 }, {
     filePath: "/src/interface_adapters/UserSignupController.js",
+    fileType: "javascript",
+    layer: "interfaceAdapters",
+    node: "controller",
+}, {
+    filePath: "/src/interface_adapters/UserSignupController.jsx",
     fileType: "javascript",
     layer: "interfaceAdapters",
     node: "controller",
@@ -108,8 +113,18 @@ describe("GetFileContentInteractor", () => {
             expect(outputData.result?.language).toBe("python");
         });
 
-        it("sets language to 'javascript' for javascript files", async () => {
+        it("sets language to 'javascript' for javascript files ending with .js", async () => {
             const inputData = makeInputData("/src/interface_adapters/UserSignupController.js");
+            const outputData = makeOutputData();
+            const interactor = new GetFileContentInteractor(genericDBAccess, genericFileAccess, inputData, outputData);
+
+            await interactor.getFileContent();
+
+            expect(outputData.result?.language).toBe("javascript");
+        });
+
+        it("sets language to 'javascript' for javascript files ending with .jsx", async () => {
+            const inputData = makeInputData("/src/interface_adapters/UserSignupController.jsx");
             const outputData = makeOutputData();
             const interactor = new GetFileContentInteractor(genericDBAccess, genericFileAccess, inputData, outputData);
 
@@ -146,15 +161,11 @@ describe("GetFileContentInteractor", () => {
                 node: "controller",
             };
             genericDBAccess.upsertFile(txtFile);
-
             const inputData = makeInputData("/src/interface_adapters/UserSignupController.txt");
             const outputData = makeOutputData();
             const interactor = new GetFileContentInteractor(genericDBAccess, genericFileAccess, inputData, outputData);
-
             await interactor.getFileContent();
-
             expect(outputData.result?.language).toBe("unknown");
-
             genericDBAccess.removeFile(txtFile.filePath);
         });
 
